@@ -1,17 +1,15 @@
 package com.bushnell;
 
-/**
- * Hello world!
- */
-public final class App {
-    private App() {
-    }
+import javax.swing.*;
 
-    /**
-     * Says hello to the world.
-     * @param args The arguments of the program.
-     */
+public class App {
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        // Create and display the Homescreen
+        JFrame frame = new JFrame("MRP System");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setContentPane(new Homescreen());
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 }
