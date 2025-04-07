@@ -7,63 +7,67 @@ import java.util.ArrayList;
 
 public class UpdateStock extends JPanel {
 
+    private JComboBox<String> comboBox;  // Made global to access throughout the class
+    private JTextField descriptionField;
+    private JTextField priceField;
+    private JTextField stockField;
+
     public UpdateStock() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.WHITE);
 
-        // Label for the title - Centered at the top
+        // Title label
         JLabel label = new JLabel("Update Stock", SwingConstants.CENTER);
         label.setFont(new Font("Arial", Font.BOLD, 24));
         label.setForeground(Color.BLACK);
-        label.setAlignmentX(CENTER_ALIGNMENT);  // Center the label
-        this.add(label);  // Add title at the top
+        label.setAlignmentX(CENTER_ALIGNMENT);
+        this.add(label);
 
-        // SKU ComboBox and Description field panel
-        JPanel skuPanel = new JPanel();
-        skuPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        // SKU ComboBox and label
+        JPanel skuPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel skuLabel = new JLabel("SKU: ");
         skuPanel.add(skuLabel);
 
-        // Fetch SKUs from database and populate ComboBox
         String[] skuData = fetchSKUsFromDatabase();
-        JComboBox<String> comboBox = new JComboBox<>(skuData);
+        comboBox = new JComboBox<>(skuData);
         skuPanel.add(comboBox);
-        skuPanel.setAlignmentX(CENTER_ALIGNMENT);  // Center the panel
+        skuPanel.setAlignmentX(CENTER_ALIGNMENT);
+        this.add(skuPanel);
 
-        this.add(skuPanel);  // Add SKU panel below title
-
-        // Description TextField (Read-only)
-        JTextField descriptionField = new JTextField(20);
+        // Description Field
+        descriptionField = new JTextField(20);
         descriptionField.setEditable(false);
         descriptionField.setText("Description will appear here");
         descriptionField.setHorizontalAlignment(JTextField.CENTER);
-        descriptionField.setAlignmentX(CENTER_ALIGNMENT);  // Center the description field
-        this.add(descriptionField);  // Add description field below SKU selection
+        descriptionField.setAlignmentX(CENTER_ALIGNMENT);
+        this.add(descriptionField);
 
-        // Price and Stock Fields (Editable)
-        JTextField priceField = new JTextField(10);
-        JTextField stockField = new JTextField(10);
+        // Price and Stock Fields
+        priceField = new JTextField(10);
+        stockField = new JTextField(10);
 
-        // Panel for Price and Stock labels and fields
-        JPanel priceStockPanel = new JPanel();
-        priceStockPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        JPanel priceStockPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         priceStockPanel.add(new JLabel("Price:"));
         priceStockPanel.add(priceField);
         priceStockPanel.add(new JLabel("Stock:"));
         priceStockPanel.add(stockField);
-        priceStockPanel.setAlignmentX(CENTER_ALIGNMENT);  // Center price and stock panel
-        this.add(priceStockPanel);  // Add price and stock fields to the bottom
+        priceStockPanel.setAlignmentX(CENTER_ALIGNMENT);
+        this.add(priceStockPanel);
 
-        // ComboBox ActionListener to Fetch Description when SKU is selected
+        // ComboBox listener for live updates
         comboBox.addActionListener(e -> {
             String selectedSku = (String) comboBox.getSelectedItem();
             String description = fetchDescriptionForSku(selectedSku);
             descriptionField.setText(description);
+
+            String[] priceAndStock = fetchPriceAndStockForSku(selectedSku);
+            priceField.setText(priceAndStock[0]);
+            stockField.setText(priceAndStock[1]);
         });
 
-        // Submit Button to Update Stock and Price
+        // Submit button
         JButton submitButton = new JButton("Update Stock");
-        submitButton.setAlignmentX(CENTER_ALIGNMENT);  // Center the button
+        submitButton.setAlignmentX(CENTER_ALIGNMENT);
         submitButton.addActionListener(e -> {
             String selectedSku = (String) comboBox.getSelectedItem();
             String newPrice = priceField.getText();
@@ -71,11 +75,15 @@ public class UpdateStock extends JPanel {
             updateStockInDatabase(selectedSku, newPrice, newStock);
         });
 
-        // Panel for Submit Button
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(submitButton);
-        buttonPanel.setAlignmentX(CENTER_ALIGNMENT);  // Center the button panel
-        this.add(buttonPanel);  // Add submit button below fields
+        buttonPanel.setAlignmentX(CENTER_ALIGNMENT);
+        this.add(buttonPanel);
+
+        // Optional: Trigger initial selection update
+        if (skuData.length > 0) {
+            comboBox.setSelectedIndex(0);
+        }
     }
 
     // Fetch all SKUs from the database
@@ -95,7 +103,7 @@ public class UpdateStock extends JPanel {
         return skuList.toArray(new String[0]);
     }
 
-    // Fetch the description for the selected SKU
+    // Fetch description for a given SKU
     private String fetchDescriptionForSku(String sku) {
         String description = "";
         String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
@@ -114,12 +122,33 @@ public class UpdateStock extends JPanel {
         return description;
     }
 
-    // Update the stock and price of the selected SKU in the database
+    // Fetch price and stock for a given SKU
+    private String[] fetchPriceAndStockForSku(String sku) {
+        String[] data = new String[2]; // [0] = price, [1] = stock
+        String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
+
+        try (Connection conn = DriverManager.getConnection(url);
+             PreparedStatement statement = conn.prepareStatement("SELECT price, stock FROM part WHERE sku = ?")) {
+            statement.setString(1, sku);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    data[0] = rs.getString("price");
+                    data[1] = rs.getString("stock");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return data;
+    }
+
+    // Update price and stock in the database
     private void updateStockInDatabase(String sku, String price, String stock) {
         String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
 
         try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement statement = conn.prepareStatement("UPDATE part SET price = ?, stock = ? WHERE sku = ?")) {
+             PreparedStatement statement = conn.prepareStatement(
+                     "UPDATE part SET price = ?, stock = ? WHERE sku = ?")) {
             statement.setString(1, price);
             statement.setString(2, stock);
             statement.setString(3, sku);
