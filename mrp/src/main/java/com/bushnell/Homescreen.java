@@ -6,7 +6,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 
-public class Homescreen extends JPanel {
+import com.bushnell.UpdateStock;
+
+
+public class Homescreen extends JPanel {  // Removed <UpdateStock> from here
     private CardLayout cardLayout;
     private JPanel cardPanel;
 
@@ -34,6 +37,15 @@ public class Homescreen extends JPanel {
             button.setBounds(10, buttonY, 180, 40);
             add(button);
             buttonY += 50;
+
+            // Add ActionListener for buttons to switch to the correct card when clicked
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                   
+                    cardLayout.show(cardPanel, name);
+                }
+            });
         }
 
         // CardLayout Panel
@@ -43,60 +55,52 @@ public class Homescreen extends JPanel {
         cardPanel.setBackground(Color.WHITE);
         add(cardPanel);
 
-        // Add cards
-        for (String name : buttonNames) {
-            JPanel panel = new JPanel();
-            panel.setBackground(Color.WHITE);
-            JLabel label = new JLabel(name);
-            label.setFont(new Font("Arial", Font.BOLD, 24));
-            panel.add(label);
-            cardPanel.add(panel, name);
-        }
+        // Add UpdateStock panel to cardPanel
+        UpdateStock updateStockPanel = new UpdateStock();
+        cardPanel.add(updateStockPanel, "Update Stock");  // Removed unnecessary cast
 
-        // Button handlers
-        for (Component comp : getComponents()) {
-            if (comp instanceof JButton) {
-                ((JButton) comp).addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        cardLayout.show(cardPanel, ((JButton) e.getSource()).getText());
-                    }
-                });
+        // Add default placeholder panels for other buttons
+        for (String name : buttonNames) {
+            if (!name.equals("Update Stock")) { // Skip because we already added it separately
+                JPanel panel = new JPanel();
+                panel.setBackground(Color.WHITE);
+                JLabel label = new JLabel(name);
+                label.setFont(new Font("Arial", Font.BOLD, 24));
+                panel.add(label);
+                cardPanel.add(panel, name);
             }
         }
     }
 
-    // Updated createLogoLabel() method
+    // Method to create the logo label
     private JLabel createLogoLabel() {
         URL imageUrl = getClass().getResource("/com/bushnell/VisualRoboticsLogo.png");
-        System.out.println("Image URL: " + imageUrl);  // ADD THIS
-    
         if (imageUrl == null) {
             throw new RuntimeException("Image not found");
         }
         ImageIcon originalIcon = new ImageIcon(imageUrl);
         Image scaledImage = originalIcon.getImage().getScaledInstance(180, 51, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(scaledImage);
-    
+
         JLabel logoLabel = new JLabel(scaledIcon);
         logoLabel.setBounds(10, 10, 180, 51);
         return logoLabel;
     }
-    
 
+    // Method to create a styled button
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         button.setForeground(Color.WHITE);
         button.setBackground(new Color(4, 172, 116));
         button.setFocusPainted(false);
         button.setFont(new Font("Arial", Font.BOLD, 14));
-        button.setOpaque(true);  
-        button.setBorderPainted(false);  
+        button.setOpaque(true);
+        button.setBorderPainted(false);
         return button;
     }
-    
 
     public static void main(String[] args) {
+        // Create JFrame and add Homescreen panel
         JFrame frame = new JFrame("MRP System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setContentPane(new Homescreen());
