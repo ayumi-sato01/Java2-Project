@@ -6,9 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 
-import com.bushnell.UpdateStock;
-
-
 public class Homescreen extends JPanel {  // Removed <UpdateStock> from here
     private CardLayout cardLayout;
     private JPanel cardPanel;
@@ -29,7 +26,19 @@ public class Homescreen extends JPanel {  // Removed <UpdateStock> from here
         titleLabel.setBounds(10, 70, 200, 30);
         add(titleLabel);
 
-        // Buttons
+        // CardLayout Panel
+        cardLayout = new CardLayout();
+        cardPanel = new JPanel(cardLayout);
+        cardPanel.setBounds(220, 10, 1050, 700);
+        cardPanel.setBackground(Color.WHITE);
+        add(cardPanel);
+
+        UpdateStock updateStockPanel = new UpdateStock();
+        StockReport stockReportPanel = new StockReport();
+
+        cardPanel.add(updateStockPanel, "Update Stock");
+        cardPanel.add(stockReportPanel, "Stock Report");
+
         String[] buttonNames = {"Update Stock", "Stock Report", "Bundle", "Demand Analysis"};
         int buttonY = 110;
         for (String name : buttonNames) {
@@ -42,34 +51,27 @@ public class Homescreen extends JPanel {  // Removed <UpdateStock> from here
             button.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                   
+                    if (name.equals("Stock Report")) {
+                        stockReportPanel.refreshTable(); 
+                    }
                     cardLayout.show(cardPanel, name);
                 }
             });
+            
         }
 
-        // CardLayout Panel
-        cardLayout = new CardLayout();
-        cardPanel = new JPanel(cardLayout);
-        cardPanel.setBounds(220, 10, 1050, 700);
-        cardPanel.setBackground(Color.WHITE);
-        add(cardPanel);
-
-        // Add UpdateStock panel to cardPanel
-        UpdateStock updateStockPanel = new UpdateStock();
-        cardPanel.add(updateStockPanel, "Update Stock");  // Removed unnecessary cast
-
-        // Add default placeholder panels for other buttons
+// Optional: placeholder for other buttons
         for (String name : buttonNames) {
-            if (!name.equals("Update Stock")) { // Skip because we already added it separately
+            if (!name.equals("Update Stock") && !name.equals("Stock Report")) {
                 JPanel panel = new JPanel();
                 panel.setBackground(Color.WHITE);
                 JLabel label = new JLabel(name);
                 label.setFont(new Font("Arial", Font.BOLD, 24));
                 panel.add(label);
                 cardPanel.add(panel, name);
+                }
             }
-        }
+
     }
 
     // Method to create the logo label
