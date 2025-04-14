@@ -38,26 +38,36 @@ public class Homescreen extends JPanel {
 
         // Buttons
         String[] buttonNames = {"Update Stock", "Stock Report", "Bundle", "Demand Analysis"};
+                
+        StockReport stockReportPanel = new StockReport();
+        UpdateStock updateStockPanel = new UpdateStock(stockReportPanel);
+        
+                // Main Content Panel (Right Side)
+        cardLayout = new CardLayout();
+        cardPanel = new JPanel(cardLayout);
+        
+        cardPanel.add(updateStockPanel, "Update Stock");
+        cardPanel.add(stockReportPanel, "Stock Report");
+        
+                // Add buttons and set listeners
         for (String name : buttonNames) {
             JButton button = createStyledButton(name);
             button.setMaximumSize(new Dimension(180, 40));
             button.setAlignmentX(Component.CENTER_ALIGNMENT);
             leftPanel.add(Box.createVerticalStrut(10));
             leftPanel.add(button);
-
+        
             button.addActionListener((ActionEvent e) -> {
                 cardLayout.show(cardPanel, name);
+                if (name.equals("Stock Report")) {
+                    stockReportPanel.refreshTable();  // 💥 Refresh data when shown
+                }
             });
         }
-
+        
         add(leftPanel, BorderLayout.WEST);
-
-        // Main Content Panel (Right Side)
-        cardLayout = new CardLayout();
-        cardPanel = new JPanel(cardLayout);
-
-        JPanel updateStockPanel = new UpdateStock();
-        JPanel stockReportPanel = new StockReport();
+        add(cardPanel, BorderLayout.CENTER);
+        
         JPanel bundlePanel = createCardPanel("Bundle");
         JPanel demandAnalysisPanel = createCardPanel("Demand Analysis");
 
@@ -65,6 +75,8 @@ public class Homescreen extends JPanel {
         cardPanel.add(stockReportPanel, "Stock Report");
         cardPanel.add(bundlePanel, "Bundle");
         cardPanel.add(demandAnalysisPanel, "Demand Analysis");
+
+        
 
         add(cardPanel, BorderLayout.CENTER);
     }

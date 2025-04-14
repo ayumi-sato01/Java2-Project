@@ -11,10 +11,15 @@ public class UpdateStock extends JPanel {
     private JTextField descriptionField;
     private JTextField priceField;
     private JTextField stockField;
+    private StockReport stockReport;
+    private StockReport stockReportInstance;
+    
 
-    public UpdateStock() {
+    public UpdateStock(StockReport stockReport) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.WHITE);
+
+        this.stockReport = stockReport;
 
         // Title label
         JLabel label = new JLabel("Update Stock", SwingConstants.CENTER);
@@ -72,7 +77,7 @@ public class UpdateStock extends JPanel {
             String selectedSku = (String) comboBox.getSelectedItem();
             String newPrice = priceField.getText();
             String newStock = stockField.getText();
-            updateStockInDatabase(selectedSku, newPrice, newStock);
+            updateStockInDatabase(selectedSku, newPrice, newStock, this.stockReport);
         });
 
         JPanel buttonPanel = new JPanel();
@@ -143,7 +148,7 @@ public class UpdateStock extends JPanel {
     }
 
     // Update price and stock in the database
-    private void updateStockInDatabase(String sku, String price, String stock) {
+    private void updateStockInDatabase(String sku, String price, String stock, StockReport stockReport) {
         try (Connection conn = DriverManager.getConnection(Database.DBName);
              PreparedStatement statement = conn.prepareStatement(
                      "UPDATE part SET price = ?, stock = ? WHERE sku = ?")) {
@@ -153,6 +158,7 @@ public class UpdateStock extends JPanel {
             int rowsAffected = statement.executeUpdate();
             if (rowsAffected > 0) {
                 JOptionPane.showMessageDialog(this, "Stock updated successfully!");
+                stockReportInstance.refreshTable(); 
             } else {
                 JOptionPane.showMessageDialog(this, "No stock updated. Please check SKU.");
             }

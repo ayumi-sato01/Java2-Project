@@ -42,6 +42,8 @@ public class StockReport extends JPanel {
         exportButton.addActionListener(e -> exportStockReportToPDF());
         add(exportButton, BorderLayout.SOUTH);
 
+        UpdateStock updateStock = new UpdateStock(this);
+
         refreshTable();
     }
 
@@ -160,8 +162,10 @@ public class StockReport extends JPanel {
                 contentStream.close();
             }
 
-            document.save("StockReport.pdf");
-            JOptionPane.showMessageDialog(this, "Stock Report exported successfully to: StockReport.pdf");
+            // Save with fixed filename
+            String filename = "StockReport.pdf";
+            document.save(filename);
+            JOptionPane.showMessageDialog(this, "Stock Report exported successfully to: " + filename);
 
         } catch (IOException e) {
             e.printStackTrace();
