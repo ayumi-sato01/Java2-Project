@@ -89,7 +89,7 @@ public class UpdateStock extends JPanel {
     // Fetch all SKUs from the database
     private String[] fetchSKUsFromDatabase() {
         ArrayList<String> skuList = new ArrayList<>();
-        String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
+        String url = Database.DBName;
 
         try (Connection conn = DriverManager.getConnection(url);
              Statement statement = conn.createStatement();
@@ -106,7 +106,7 @@ public class UpdateStock extends JPanel {
     // Fetch description for a given SKU
     private String fetchDescriptionForSku(String sku) {
         String description = "";
-        String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
+        String url = Database.DBName;
 
         try (Connection conn = DriverManager.getConnection(url);
              PreparedStatement statement = conn.prepareStatement("SELECT description FROM part WHERE sku = ?")) {
