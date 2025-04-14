@@ -33,9 +33,14 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
               <transformers>
                 <transformer>
                   <mainClass>com.bushnell.App</mainClass>
+                </transformer>
+                <transformer>
+                  <resource>META-INF/services/pdfbox</resource>
+                  <resource>META-INF/services/fontbox</resource>
                 </transformer>
               </transformers>
             </configuration>

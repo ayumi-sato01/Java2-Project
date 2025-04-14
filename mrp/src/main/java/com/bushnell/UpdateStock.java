@@ -89,7 +89,7 @@ public class UpdateStock extends JPanel {
     // Fetch all SKUs from the database
     private String[] fetchSKUsFromDatabase() {
         ArrayList<String> skuList = new ArrayList<>();
-        String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
+        String url = Database.DBName;
 
         try (Connection conn = DriverManager.getConnection(url);
              Statement statement = conn.createStatement();
@@ -106,7 +106,7 @@ public class UpdateStock extends JPanel {
     // Fetch description for a given SKU
     private String fetchDescriptionForSku(String sku) {
         String description = "";
-        String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
+        String url = Database.DBName;
 
         try (Connection conn = DriverManager.getConnection(url);
              PreparedStatement statement = conn.prepareStatement("SELECT description FROM part WHERE sku = ?")) {
@@ -125,7 +125,7 @@ public class UpdateStock extends JPanel {
     // Fetch price and stock for a given SKU
     private String[] fetchPriceAndStockForSku(String sku) {
         String[] data = new String[2]; // [0] = price, [1] = stock
-        String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
+        String url = Database.DBName;
 
         try (Connection conn = DriverManager.getConnection(url);
              PreparedStatement statement = conn.prepareStatement("SELECT price, stock FROM part WHERE sku = ?")) {
@@ -144,9 +144,7 @@ public class UpdateStock extends JPanel {
 
     // Update price and stock in the database
     private void updateStockInDatabase(String sku, String price, String stock) {
-        String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
-
-        try (Connection conn = DriverManager.getConnection(url);
+        try (Connection conn = DriverManager.getConnection(Database.DBName);
              PreparedStatement statement = conn.prepareStatement(
                      "UPDATE part SET price = ?, stock = ? WHERE sku = ?")) {
             statement.setString(1, price);
