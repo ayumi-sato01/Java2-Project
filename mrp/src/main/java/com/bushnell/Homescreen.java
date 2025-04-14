@@ -3,97 +3,86 @@ package com.bushnell;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.net.URL;
 
-public class Homescreen extends JPanel {  // Removed <UpdateStock> from here
+public class Homescreen extends JPanel {
     private CardLayout cardLayout;
     private JPanel cardPanel;
 
+    private static final Color BUTTON_GREEN = new Color(4, 172, 116);
+
     public Homescreen() {
         setPreferredSize(new Dimension(1280, 720));
-        setBackground(Color.BLACK);
-        setLayout(null); // Using absolute positioning
+        setLayout(new BorderLayout());
 
-        // Load and add logo
+        // Left Panel (Logo + Buttons)
+        JPanel leftPanel = new JPanel();
+        leftPanel.setBackground(Color.BLACK);
+        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+        leftPanel.setPreferredSize(new Dimension(200, 720));
+
+        // Logo
         JLabel logoLabel = createLogoLabel();
-        add(logoLabel);
+        logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leftPanel.add(Box.createVerticalStrut(10));
+        leftPanel.add(logoLabel);
+        leftPanel.add(Box.createVerticalStrut(20));
 
-        // Title label
+        // Title
         JLabel titleLabel = new JLabel("MRP System");
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        titleLabel.setBounds(10, 70, 200, 30);
-        add(titleLabel);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leftPanel.add(titleLabel);
+        leftPanel.add(Box.createVerticalStrut(20));
 
-        // CardLayout Panel
+        // Buttons
+        String[] buttonNames = {"Update Stock", "Stock Report", "Bundle", "Demand Analysis"};
+        for (String name : buttonNames) {
+            JButton button = createStyledButton(name);
+            button.setMaximumSize(new Dimension(180, 40));
+            button.setAlignmentX(Component.CENTER_ALIGNMENT);
+            leftPanel.add(Box.createVerticalStrut(10));
+            leftPanel.add(button);
+
+            button.addActionListener((ActionEvent e) -> {
+                cardLayout.show(cardPanel, name);
+            });
+        }
+
+        add(leftPanel, BorderLayout.WEST);
+
+        // Main Content Panel (Right Side)
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
-        cardPanel.setBounds(220, 10, 1050, 700);
-        cardPanel.setBackground(Color.WHITE);
-        add(cardPanel);
 
-        UpdateStock updateStockPanel = new UpdateStock();
-        StockReport stockReportPanel = new StockReport();
+        JPanel updateStockPanel = new UpdateStock();
+        JPanel stockReportPanel = new StockReport();
+        JPanel bundlePanel = createCardPanel("Bundle");
+        JPanel demandAnalysisPanel = createCardPanel("Demand Analysis");
 
         cardPanel.add(updateStockPanel, "Update Stock");
         cardPanel.add(stockReportPanel, "Stock Report");
+        cardPanel.add(bundlePanel, "Bundle");
+        cardPanel.add(demandAnalysisPanel, "Demand Analysis");
 
-        String[] buttonNames = {"Update Stock", "Stock Report", "Bundle", "Demand Analysis"};
-        int buttonY = 110;
-        for (String name : buttonNames) {
-            JButton button = createStyledButton(name);
-            button.setBounds(10, buttonY, 180, 40);
-            add(button);
-            buttonY += 50;
-
-            // Add ActionListener for buttons to switch to the correct card when clicked
-            button.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (name.equals("Stock Report")) {
-                        stockReportPanel.refreshTable(); 
-                    }
-                    cardLayout.show(cardPanel, name);
-                }
-            });
-            
-        }
-
-// Optional: placeholder for other buttons
-        for (String name : buttonNames) {
-            if (!name.equals("Update Stock") && !name.equals("Stock Report")) {
-                JPanel panel = new JPanel();
-                panel.setBackground(Color.WHITE);
-                JLabel label = new JLabel(name);
-                label.setFont(new Font("Arial", Font.BOLD, 24));
-                panel.add(label);
-                cardPanel.add(panel, name);
-                }
-            }
-
+        add(cardPanel, BorderLayout.CENTER);
     }
 
-    // Method to create the logo label
     private JLabel createLogoLabel() {
         URL imageUrl = getClass().getResource("/com/bushnell/VisualRoboticsLogo.png");
         if (imageUrl == null) {
-            throw new RuntimeException("Image not found");
+            throw new RuntimeException("Logo image not found");
         }
         ImageIcon originalIcon = new ImageIcon(imageUrl);
         Image scaledImage = originalIcon.getImage().getScaledInstance(180, 51, Image.SCALE_SMOOTH);
-        ImageIcon scaledIcon = new ImageIcon(scaledImage);
-
-        JLabel logoLabel = new JLabel(scaledIcon);
-        logoLabel.setBounds(10, 10, 180, 51);
-        return logoLabel;
+        return new JLabel(new ImageIcon(scaledImage));
     }
 
-    // Method to create a styled button
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         button.setForeground(Color.WHITE);
-        button.setBackground(new Color(4, 172, 116));
+        button.setBackground(BUTTON_GREEN);
         button.setFocusPainted(false);
         button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setOpaque(true);
@@ -101,8 +90,16 @@ public class Homescreen extends JPanel {  // Removed <UpdateStock> from here
         return button;
     }
 
+    private JPanel createCardPanel(String title) {
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.WHITE);
+        JLabel label = new JLabel(title);
+        label.setFont(new Font("Arial", Font.BOLD, 24));
+        panel.add(label);
+        return panel;
+    }
+
     public static void main(String[] args) {
-        // Create JFrame and add Homescreen panel
         JFrame frame = new JFrame("MRP System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setContentPane(new Homescreen());

@@ -144,9 +144,7 @@ public class UpdateStock extends JPanel {
 
     // Update price and stock in the database
     private void updateStockInDatabase(String sku, String price, String stock) {
-        String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
-
-        try (Connection conn = DriverManager.getConnection(url);
+        try (Connection conn = DriverManager.getConnection(Database.DBName);
              PreparedStatement statement = conn.prepareStatement(
                      "UPDATE part SET price = ?, stock = ? WHERE sku = ?")) {
             statement.setString(1, price);
