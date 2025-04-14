@@ -125,7 +125,7 @@ public class UpdateStock extends JPanel {
     // Fetch price and stock for a given SKU
     private String[] fetchPriceAndStockForSku(String sku) {
         String[] data = new String[2]; // [0] = price, [1] = stock
-        String url = "jdbc:sqlite:/Users/ayumisato/Java2-Project/VR-Factory.db";
+        String url = Database.DBName;
 
         try (Connection conn = DriverManager.getConnection(url);
              PreparedStatement statement = conn.prepareStatement("SELECT price, stock FROM part WHERE sku = ?")) {
