@@ -6,16 +6,18 @@ import java.awt.event.ActionEvent;
 import java.net.URL;
 
 public class Homescreen extends JPanel {
-    private CardLayout cardLayout;
-    private JPanel cardPanel;
 
-    private static final Color BUTTON_GREEN = new Color(4, 172, 116);
+    private CardLayout cardLayout;     // Used to switch between panels
+    private JPanel cardPanel;          // Main content area that swaps panels
 
+    private static final Color BUTTON_GREEN = new Color(4, 172, 116); // Button color
+
+    // Constructor: builds the main screen layout
     public Homescreen() {
         setPreferredSize(new Dimension(1280, 720));
         setLayout(new BorderLayout());
 
-        // Left Panel (Logo + Buttons)
+        // --- Left Sidebar ---
         JPanel leftPanel = new JPanel();
         leftPanel.setBackground(Color.BLACK);
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
@@ -28,7 +30,7 @@ public class Homescreen extends JPanel {
         leftPanel.add(logoLabel);
         leftPanel.add(Box.createVerticalStrut(20));
 
-        // Title
+        // App title
         JLabel titleLabel = new JLabel("MRP System");
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
@@ -36,51 +38,52 @@ public class Homescreen extends JPanel {
         leftPanel.add(titleLabel);
         leftPanel.add(Box.createVerticalStrut(20));
 
-        // Buttons
+        // Buttons to switch panels
         String[] buttonNames = {"Update Stock", "Stock Report", "Bundle", "Demand Analysis"};
-                
+
+        // --- Panels to switch between ---
         StockReport stockReportPanel = new StockReport();
         UpdateStock updateStockPanel = new UpdateStock(stockReportPanel);
-        
-                // Main Content Panel (Right Side)
+        Bundle bundlePanel = new Bundle();
+        JPanel demandAnalysisPanel = createCardPanel("Demand Analysis");
+
+        // CardLayout panel to hold all screens
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
-        
+
+        // Add all content panels to the CardLayout
         cardPanel.add(updateStockPanel, "Update Stock");
         cardPanel.add(stockReportPanel, "Stock Report");
-        
-                // Add buttons and set listeners
+        cardPanel.add(bundlePanel, "Bundle");
+        cardPanel.add(demandAnalysisPanel, "Demand Analysis");
+
+        // Create and add buttons for navigation
         for (String name : buttonNames) {
             JButton button = createStyledButton(name);
             button.setMaximumSize(new Dimension(180, 40));
             button.setAlignmentX(Component.CENTER_ALIGNMENT);
             leftPanel.add(Box.createVerticalStrut(10));
             leftPanel.add(button);
-        
+
+            // Button logic: show the corresponding panel
             button.addActionListener((ActionEvent e) -> {
                 cardLayout.show(cardPanel, name);
+
+                // Extra logic for refreshing specific panels
                 if (name.equals("Stock Report")) {
-                    stockReportPanel.refreshTable();  // 💥 Refresh data when shown
+                    stockReportPanel.refreshTable();  // Reload stock table
+                } else if (name.equals("Bundle")) {
+                    bundlePanel.refreshData();       // Reload bundle dropdown & stock
                 }
             });
         }
-        
-        add(leftPanel, BorderLayout.WEST);
-        add(cardPanel, BorderLayout.CENTER);
-        
-        JPanel bundlePanel = createCardPanel("Bundle");
-        JPanel demandAnalysisPanel = createCardPanel("Demand Analysis");
 
-        cardPanel.add(updateStockPanel, "Update Stock");
-        cardPanel.add(stockReportPanel, "Stock Report");
-        cardPanel.add(bundlePanel, "Bundle");
-        cardPanel.add(demandAnalysisPanel, "Demand Analysis");
-
-        
-
-        add(cardPanel, BorderLayout.CENTER);
+        // --- Add panels to the screen ---
+        add(leftPanel, BorderLayout.WEST);     // Sidebar
+        add(cardPanel, BorderLayout.CENTER);   // Main content
     }
 
+    // Loads and resizes the logo image
     private JLabel createLogoLabel() {
         URL imageUrl = getClass().getResource("/com/bushnell/VisualRoboticsLogo.png");
         if (imageUrl == null) {
@@ -91,6 +94,7 @@ public class Homescreen extends JPanel {
         return new JLabel(new ImageIcon(scaledImage));
     }
 
+    // Creates a styled green navigation button
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         button.setForeground(Color.WHITE);
@@ -102,6 +106,7 @@ public class Homescreen extends JPanel {
         return button;
     }
 
+    // Creates a placeholder panel for future features like Demand Analysis
     private JPanel createCardPanel(String title) {
         JPanel panel = new JPanel();
         panel.setBackground(Color.WHITE);
@@ -111,6 +116,7 @@ public class Homescreen extends JPanel {
         return panel;
     }
 
+    // Entry point: creates and displays the application window
     public static void main(String[] args) {
         JFrame frame = new JFrame("MRP System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

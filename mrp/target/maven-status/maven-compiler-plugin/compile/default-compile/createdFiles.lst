@@ -1,5 +1,7 @@
 com/bushnell/Homescreen.class
 com/bushnell/App.class
-com/bushnell/StockReport.class
 com/bushnell/UpdateStock.class
 com/bushnell/Database.class
+com/bushnell/Bundle.class
+com/bushnell/StockReport.class
+com/bushnell/Bundle$1.class
