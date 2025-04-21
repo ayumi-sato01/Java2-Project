@@ -7,34 +7,35 @@ import java.util.ArrayList;
 
 public class UpdateStock extends JPanel {
 
-    private JComboBox<String> comboBox;  // Made global to access throughout the class
-    private JTextField descriptionField;
-    private JTextField priceField;
-    private JTextField stockField;
+    private JComboBox<String> comboBox;       // Dropdown for SKU selection
+    private JTextField descriptionField;      // Displays item description
+    private JTextField priceField;            // Editable price input
+    private JTextField stockField;            // Editable stock input
+    private StockReport stockReport;          // Reference to update stock table
 
-    public UpdateStock() {
+    // Constructor: builds the "Update Stock" interface
+    public UpdateStock(StockReport stockReport) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.WHITE);
+        this.stockReport = stockReport;
 
-        // Title label
+        // Title
         JLabel label = new JLabel("Update Stock", SwingConstants.CENTER);
         label.setFont(new Font("Arial", Font.BOLD, 24));
         label.setForeground(Color.BLACK);
         label.setAlignmentX(CENTER_ALIGNMENT);
         this.add(label);
 
-        // SKU ComboBox and label
+        // SKU Dropdown with label
         JPanel skuPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel skuLabel = new JLabel("SKU: ");
-        skuPanel.add(skuLabel);
-
+        skuPanel.add(new JLabel("SKU: "));
         String[] skuData = fetchSKUsFromDatabase();
         comboBox = new JComboBox<>(skuData);
         skuPanel.add(comboBox);
         skuPanel.setAlignmentX(CENTER_ALIGNMENT);
         this.add(skuPanel);
 
-        // Description Field
+        // Description field
         descriptionField = new JTextField(20);
         descriptionField.setEditable(false);
         descriptionField.setText("Description will appear here");
@@ -42,10 +43,9 @@ public class UpdateStock extends JPanel {
         descriptionField.setAlignmentX(CENTER_ALIGNMENT);
         this.add(descriptionField);
 
-        // Price and Stock Fields
+        // Price and Stock input fields
         priceField = new JTextField(10);
         stockField = new JTextField(10);
-
         JPanel priceStockPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         priceStockPanel.add(new JLabel("Price:"));
         priceStockPanel.add(priceField);
@@ -54,18 +54,16 @@ public class UpdateStock extends JPanel {
         priceStockPanel.setAlignmentX(CENTER_ALIGNMENT);
         this.add(priceStockPanel);
 
-        // ComboBox listener for live updates
+        // Dropdown listener: auto-fill description, price, and stock
         comboBox.addActionListener(e -> {
             String selectedSku = (String) comboBox.getSelectedItem();
-            String description = fetchDescriptionForSku(selectedSku);
-            descriptionField.setText(description);
-
+            descriptionField.setText(fetchDescriptionForSku(selectedSku));
             String[] priceAndStock = fetchPriceAndStockForSku(selectedSku);
             priceField.setText(priceAndStock[0]);
             stockField.setText(priceAndStock[1]);
         });
 
-        // Submit button
+        // Submit button to update database
         JButton submitButton = new JButton("Update Stock");
         submitButton.setAlignmentX(CENTER_ALIGNMENT);
         submitButton.addActionListener(e -> {
@@ -80,20 +78,19 @@ public class UpdateStock extends JPanel {
         buttonPanel.setAlignmentX(CENTER_ALIGNMENT);
         this.add(buttonPanel);
 
-        // Optional: Trigger initial selection update
+        // Trigger the dropdown listener on load
         if (skuData.length > 0) {
             comboBox.setSelectedIndex(0);
         }
     }
 
-    // Fetch all SKUs from the database
+    // Fetch all SKUs from the database to populate the dropdown
     private String[] fetchSKUsFromDatabase() {
         ArrayList<String> skuList = new ArrayList<>();
-        String url = Database.DBName;
-
-        try (Connection conn = DriverManager.getConnection(url);
+        try (Connection conn = DriverManager.getConnection(Database.DBName);
              Statement statement = conn.createStatement();
              ResultSet rs = statement.executeQuery("SELECT sku FROM part")) {
+
             while (rs.next()) {
                 skuList.add(rs.getString("sku"));
             }
@@ -103,15 +100,13 @@ public class UpdateStock extends JPanel {
         return skuList.toArray(new String[0]);
     }
 
-    // Fetch description for a given SKU
+    // Fetch the description for the selected SKU
     private String fetchDescriptionForSku(String sku) {
         String description = "";
-        String url = Database.DBName;
-
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement statement = conn.prepareStatement("SELECT description FROM part WHERE sku = ?")) {
-            statement.setString(1, sku);
-            try (ResultSet rs = statement.executeQuery()) {
+        try (Connection conn = DriverManager.getConnection(Database.DBName);
+             PreparedStatement stmt = conn.prepareStatement("SELECT description FROM part WHERE sku = ?")) {
+            stmt.setString(1, sku);
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     description = rs.getString("description");
                 }
@@ -122,15 +117,13 @@ public class UpdateStock extends JPanel {
         return description;
     }
 
-    // Fetch price and stock for a given SKU
+    // Fetch price and stock for the selected SKU
     private String[] fetchPriceAndStockForSku(String sku) {
         String[] data = new String[2]; // [0] = price, [1] = stock
-        String url = Database.DBName;
-
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement statement = conn.prepareStatement("SELECT price, stock FROM part WHERE sku = ?")) {
-            statement.setString(1, sku);
-            try (ResultSet rs = statement.executeQuery()) {
+        try (Connection conn = DriverManager.getConnection(Database.DBName);
+             PreparedStatement stmt = conn.prepareStatement("SELECT price, stock FROM part WHERE sku = ?")) {
+            stmt.setString(1, sku);
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     data[0] = rs.getString("price");
                     data[1] = rs.getString("stock");
@@ -142,20 +135,24 @@ public class UpdateStock extends JPanel {
         return data;
     }
 
-    // Update price and stock in the database
+    // Update the price and stock of the selected SKU in the database
     private void updateStockInDatabase(String sku, String price, String stock) {
         try (Connection conn = DriverManager.getConnection(Database.DBName);
-             PreparedStatement statement = conn.prepareStatement(
+             PreparedStatement stmt = conn.prepareStatement(
                      "UPDATE part SET price = ?, stock = ? WHERE sku = ?")) {
-            statement.setString(1, price);
-            statement.setString(2, stock);
-            statement.setString(3, sku);
-            int rowsAffected = statement.executeUpdate();
+
+            stmt.setString(1, price);
+            stmt.setString(2, stock);
+            stmt.setString(3, sku);
+
+            int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
                 JOptionPane.showMessageDialog(this, "Stock updated successfully!");
+                stockReport.refreshTable(); // Refresh StockReport panel
             } else {
                 JOptionPane.showMessageDialog(this, "No stock updated. Please check SKU.");
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error updating stock.");

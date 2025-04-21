@@ -23,30 +23,39 @@ public class StockReport extends JPanel {
     private DefaultTableModel tableModel;
     private JButton exportButton;
 
+    // Constructor: Builds the Stock Report panel layout
     public StockReport() {
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
 
+        // Title
         JLabel titleLabel = new JLabel("Stock Report", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(Color.BLACK);
         add(titleLabel, BorderLayout.NORTH);
 
+        // Table setup
         String[] columns = {"SKU", "Description", "Price", "Stock"};
         tableModel = new DefaultTableModel(columns, 0);
         stockTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(stockTable);
         add(scrollPane, BorderLayout.CENTER);
+        stockTable.getColumnModel().getColumn(0).setPreferredWidth(275); 
+        stockTable.getColumnModel().getColumn(1).setPreferredWidth(250); 
 
+
+        // Export button
         exportButton = new JButton("Export as PDF");
         exportButton.addActionListener(e -> exportStockReportToPDF());
         add(exportButton, BorderLayout.SOUTH);
 
+        // Load data initially
         refreshTable();
     }
 
+    // Loads stock data from the database into the table
     public void refreshTable() {
-        tableModel.setRowCount(0);
+        tableModel.setRowCount(0); // Clear previous data
 
         try (Connection conn = DriverManager.getConnection(Database.DBName);
              Statement statement = conn.createStatement();
@@ -67,20 +76,23 @@ public class StockReport extends JPanel {
         }
     }
 
+    // Exports the current stock table to a timestamped PDF
     private void exportStockReportToPDF() {
         PDDocument document = new PDDocument();
+
         try {
+            // Layout setup
             float margin = 50;
             float yStart = PDRectangle.LETTER.getHeight() - margin;
-            float tableWidth = PDRectangle.LETTER.getWidth() - 2 * margin;
-            float[] colWidths = {160, 200, 80, 80}; // Adjusted: SKU more space, Description less
+            float[] colWidths = {160, 200, 80, 80};
             String[] headers = {"SKU", "Description", "Price", "Stock"};
             PDType1Font headerFont = PDType1Font.HELVETICA_BOLD;
             PDType1Font bodyFont = PDType1Font.HELVETICA;
             int fontSize = 10;
             float cellHeight = 15;
-
             String timestamp = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(new Date());
+
+            // Convert table data into a list of rows
             List<List<String>> rows = new ArrayList<>();
             for (int i = 0; i < tableModel.getRowCount(); i++) {
                 Vector<?> row = (Vector<?>) tableModel.getDataVector().get(i);
@@ -94,6 +106,7 @@ public class StockReport extends JPanel {
             int rowIndex = 0;
             int pageNum = 0;
 
+            // Create PDF pages and draw content
             while (rowIndex < rows.size()) {
                 PDPage page = new PDPage(PDRectangle.LETTER);
                 document.addPage(page);
@@ -104,7 +117,7 @@ public class StockReport extends JPanel {
 
                 float yPos = yStart;
 
-                // Header
+                // Title
                 contentStream.beginText();
                 contentStream.newLineAtOffset(margin, yPos);
                 contentStream.setFont(headerFont, 12);
@@ -113,6 +126,7 @@ public class StockReport extends JPanel {
 
                 yPos -= 20;
 
+                // Timestamp
                 contentStream.beginText();
                 contentStream.newLineAtOffset(margin, yPos);
                 contentStream.setFont(bodyFont, 10);
@@ -121,7 +135,7 @@ public class StockReport extends JPanel {
 
                 yPos -= 25;
 
-                // Table headers
+                // Table Headers
                 float xPos = margin;
                 contentStream.setFont(headerFont, fontSize);
                 for (int i = 0; i < headers.length; i++) {
@@ -134,7 +148,7 @@ public class StockReport extends JPanel {
 
                 yPos -= cellHeight;
 
-                // Rows
+                // Table Rows
                 contentStream.setFont(bodyFont, fontSize);
                 while (rowIndex < rows.size() && yPos > margin + cellHeight) {
                     xPos = margin;
@@ -150,7 +164,7 @@ public class StockReport extends JPanel {
                     rowIndex++;
                 }
 
-                // Footer
+                // Footer with page number
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA_OBLIQUE, 10);
                 contentStream.newLineAtOffset(PDRectangle.LETTER.getWidth() - margin - 100, margin - 10);
@@ -160,8 +174,12 @@ public class StockReport extends JPanel {
                 contentStream.close();
             }
 
-            document.save("StockReport.pdf");
-            JOptionPane.showMessageDialog(this, "Stock Report exported successfully to: StockReport.pdf");
+            // Save with timestamped filename
+            String filenameTimestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+            String filename = "StockReport_" + filenameTimestamp + ".pdf";
+            document.save(filename);
+
+            JOptionPane.showMessageDialog(this, "Stock Report exported successfully to: " + filename);
 
         } catch (IOException e) {
             e.printStackTrace();
