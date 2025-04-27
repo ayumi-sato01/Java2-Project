@@ -45,7 +45,7 @@ public class Homescreen extends JPanel {
         StockReport stockReportPanel = new StockReport();
         UpdateStock updateStockPanel = new UpdateStock(stockReportPanel);
         Bundle bundlePanel = new Bundle();
-        JPanel demandAnalysisPanel = createCardPanel("Demand Analysis");
+        DemandAnalysis demandAnalysisPanel = new DemandAnalysis();
 
         // CardLayout panel to hold all screens
         cardLayout = new CardLayout();
@@ -74,6 +74,9 @@ public class Homescreen extends JPanel {
                     stockReportPanel.refreshTable();  // Reload stock table
                 } else if (name.equals("Bundle")) {
                     bundlePanel.refreshData();       // Reload bundle dropdown & stock
+                }
+                else if (name.equals("Demand Analysis")) {
+                    demandAnalysisPanel.refreshData(); // refresh content without re-adding the panel
                 }
             });
         }
@@ -104,16 +107,6 @@ public class Homescreen extends JPanel {
         button.setOpaque(true);
         button.setBorderPainted(false);
         return button;
-    }
-
-    // Creates a placeholder panel for future features like Demand Analysis
-    private JPanel createCardPanel(String title) {
-        JPanel panel = new JPanel();
-        panel.setBackground(Color.WHITE);
-        JLabel label = new JLabel(title);
-        label.setFont(new Font("Arial", Font.BOLD, 24));
-        panel.add(label);
-        return panel;
     }
 
     // Entry point: creates and displays the application window
