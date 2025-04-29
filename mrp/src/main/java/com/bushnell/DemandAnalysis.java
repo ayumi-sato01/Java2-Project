@@ -89,9 +89,8 @@ public class DemandAnalysis extends JPanel {
             }
         });
 
-        // Set to no selection only if there are items
         if (componentDropdown.getItemCount() > 0) {
-            componentDropdown.setSelectedIndex(-1); // do this last!
+            componentDropdown.setSelectedIndex(-1); 
         }
 
     }
@@ -126,7 +125,7 @@ public class DemandAnalysis extends JPanel {
     public void refreshData() {
         componentDropdown.removeAllItems();
         loadDropdownData();
-        componentDropdown.setSelectedIndex(-1); // Reset selection
+        componentDropdown.setSelectedIndex(-1); 
         descriptionLabel.setText("Description: ");
         quantityLabel.setText("In Stock: ");
         requestField.setText("");
@@ -138,37 +137,55 @@ public class DemandAnalysis extends JPanel {
     private void calculateDemand() {
         String parentSKU = (String) componentDropdown.getSelectedItem();
         int requestedQty;
-
+    
         try {
             requestedQty = Integer.parseInt(requestField.getText());
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Please enter a valid quantity.");
             return;
         }
-
+    
         tableModel.setRowCount(0);
         double totalCost = 0.0;
         boolean hasShortage = false;
-
+    
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:VR-Factory.db")) {
+            // FIRST: Check parent stock
+            int parentStock = 0;
+            PreparedStatement parentStmt = conn.prepareStatement("SELECT stock FROM part WHERE SKU = ?");
+            parentStmt.setString(1, parentSKU);
+            ResultSet parentRs = parentStmt.executeQuery();
+            if (parentRs.next()) {
+                parentStock = parentRs.getInt("stock");
+            }
+    
+            if (parentStock >= requestedQty) {
+                JOptionPane.showMessageDialog(this, "Enough parent stock available. You can fulfill the request with existing parent SKUs!");
+                totalCostLabel.setText("Total Cost: $0.00");
+                return; 
+            }
+    
+            int remainingQty = requestedQty - parentStock;
+    
+            
             PreparedStatement bomStmt = conn.prepareStatement("SELECT SKU, quantity FROM bom WHERE parent_SKU = ?");
             bomStmt.setString(1, parentSKU);
             ResultSet bomRs = bomStmt.executeQuery();
-
+    
             while (bomRs.next()) {
                 String partSKU = bomRs.getString("SKU");
                 int requiredPerUnit = bomRs.getInt("quantity");
-                int totalNeeded = requestedQty * requiredPerUnit;
-
+                int totalNeeded = remainingQty * requiredPerUnit;
+    
                 PreparedStatement partStmt = conn.prepareStatement("SELECT description, stock, price FROM part WHERE SKU = ?");
                 partStmt.setString(1, partSKU);
                 ResultSet partRs = partStmt.executeQuery();
-
+    
                 if (partRs.next()) {
                     String description = partRs.getString("description");
                     int stock = partRs.getInt("stock");
                     double price = partRs.getDouble("price");
-
+    
                     if (stock < totalNeeded) {
                         hasShortage = true;
                         int shortage = totalNeeded - stock;
@@ -178,9 +195,9 @@ public class DemandAnalysis extends JPanel {
                     }
                 }
             }
-
+    
             if (!hasShortage) {
-                // Calculate max possible
+                // Calculate how many full bundles could be made from available stock
                 bomRs = bomStmt.executeQuery();
                 int maxBundles = Integer.MAX_VALUE;
                 while (bomRs.next()) {
@@ -195,12 +212,12 @@ public class DemandAnalysis extends JPanel {
                         maxBundles = Math.min(maxBundles, possible);
                     }
                 }
-                JOptionPane.showMessageDialog(this, "Enough parts available. You can make " + maxBundles + " unit(s).");
+                JOptionPane.showMessageDialog(this, "Enough parts available. You can make " + maxBundles + " additional unit(s)!");
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error during analysis: " + ex.getMessage());
         }
-
+    
         totalCostLabel.setText("Total Cost: $" + String.format("%.2f", totalCost));
-    }
+    }    
 }
