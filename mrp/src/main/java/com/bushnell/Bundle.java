@@ -20,6 +20,17 @@ public class Bundle extends JPanel {
 
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+        topPanel.setBackground(Color.WHITE);
+
+        // Title Label centered at top
+        JLabel titleLabel = new JLabel("Bundle");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        titleLabel.setBackground(Color.WHITE);
+        topPanel.add(Box.createVerticalStrut(20));
+        topPanel.add(titleLabel);
+        topPanel.add(Box.createVerticalStrut(10));
+
 
         JPanel dropdownPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         dropdownPanel.add(new JLabel("Select Bundle (Parent SKU):"));
